@@ -1,0 +1,16 @@
+DELETE  http://localhost:3000/api/sousChapitre/sousChapitre/Delete/:1
+
+
+POST http://localhost:3000/api/cahier-de-texte/cahier-de-texte
+Content-Type: application/json
+
+{
+    "nomProfesseur": "Dr. Dupont",
+    "dateCours": "2024-11-03",
+    "heureDebut": "10:00:00",
+    "heureFin": "12:00:00",
+    "descriptionCours": "Introduction aux concepts avancés",
+    "element_constitutif_id": 1,
+    "chapitre_id": 2,
+    "sous_chapitre_id": 3
+}
