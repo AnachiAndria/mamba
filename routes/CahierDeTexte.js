@@ -1,5 +1,5 @@
 const express = require('express');
-const { CahierDeTexte } = require('../models');
+const { CahierDeTexte,ElementConstitutif } = require('../models');
 const router = express.Router();
 
 // Route pour ajouter un cahier de texte
@@ -26,9 +26,24 @@ router.post('/cahier-de-texte', async (req, res) => {
 router.get('/cahier-de-texte', async (req, res) => {
     try {
         const cahiersDeTexte = await CahierDeTexte.findAll();
-        res.status(200).json(cahiersDeTexte);
+        const ecRec = await ElementConstitutif.findAll({
+            attributes: ['id','nomEC']
+        });
+
+        //mapping 
+        const ecMap = ecRec.reduce((map,ec) =>{
+            map[ec.id] = ec.nomEC;
+            return map;
+        },{});
+
+        const result = cahiersDeTexte.map(cahier =>({
+            ...cahier.toJSON(),
+            nomEC: ecMap[cahier.element_constitutif_id] || null
+        }));
+
+        res.status(200).json(result);
     } catch (err) {
-        res.status(500).json({ error: 'Erreur lors de la récupération des cahiers de texte.' });
+        res.status(500).json({ error: 'Erreur lors de la récupération des cahiers de texte:'+err });
     }
 });
 
