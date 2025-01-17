@@ -125,6 +125,28 @@ router.put('/EC/:id', async (req, res) => {
     }
 });
 
+router.put('/ECfront/:id', async (req, res) => {
+    const { id } = req.params;
+    let {nomEC, professeur_responsable, session, unite_enseignement_id } = req.body;
+    unite_enseignement_id = unite_enseignement_id.unite_enseignement_id
+    
+    try {
+        const ec = await ElementConstitutif.findByPk(id);
+        if (ec) {
+            ec.nomEC = nomEC;
+            ec.professeur_responsable = professeur_responsable;
+            ec.session = session;
+            ec.unite_enseignement_id = unite_enseignement_id;
+            await ec.save();
+            res.status(200).json(ec);
+        } else {
+            res.status(404).json({ error: 'Élément constitutif non trouvé.' });
+        }
+    } catch (err) {
+        res.status(500).json({ error: 'Erreur lors de la mise à jour de l\'élément constitutif: '+err });
+    }
+});
+
 router.delete('/EC/:id', async (req, res) => {
     const { id } = req.params;
 

@@ -1,6 +1,50 @@
 const express = require('express');
 const { CahierDeTexte,ElementConstitutif } = require('../models');
 const router = express.Router();
+const { Op } = require('sequelize');
+
+// Route pour récupérer les cahiers de texte de la semaine actuelle
+router.get('/cahier-Add-Liste', async (req, res) => {
+    try {
+        // Calculer la plage de dates pour la semaine actuelle
+        const now = new Date();
+        const firstDayOfWeek = new Date(now.setDate(now.getDate() - now.getDay() + 1)); // Lundi
+        firstDayOfWeek.setHours(0, 0, 0, 0); // Début de la journée
+        const lastDayOfWeek = new Date(now.setDate(firstDayOfWeek.getDate() + 6)); // Dimanche
+        lastDayOfWeek.setHours(23, 59, 59, 999); // Fin de la journée
+
+        // Récupérer les enregistrements dans la plage de dates
+        const cahiersDeTexte = await CahierDeTexte.findAll({
+            where: {
+                createdAt: {
+                    [Op.between]: [firstDayOfWeek, lastDayOfWeek]
+                }
+            },
+            order: [['createdAt', 'DESC']] // Trier par createdAt en ordre décroissant
+        });
+
+        // Récupérer les éléments constitutifs avec leurs noms
+        const ecRec = await ElementConstitutif.findAll({
+            attributes: ['id', 'nomEC']
+        });
+
+        // Mapping des noms d'éléments constitutifs
+        const ecMap = ecRec.reduce((map, ec) => {
+            map[ec.id] = ec.nomEC;
+            return map;
+        }, {});
+
+        // Ajouter le nom de l'élément constitutif dans le résultat
+        const result = cahiersDeTexte.map(cahier => ({
+            ...cahier.toJSON(),
+            nomEC: ecMap[cahier.element_constitutif_id] || null
+        }));
+
+        res.status(200).json(result);
+    } catch (err) {
+        res.status(500).json({ error: 'Erreur lors de la récupération des cahiers de texte: ' + err });
+    }
+});
 
 // Route pour ajouter un cahier de texte
 router.post('/cahier-de-texte', async (req, res) => {
